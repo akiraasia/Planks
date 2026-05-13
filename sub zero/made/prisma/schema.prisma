@@ -1,0 +1,225 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  name      String?
+  projects  Project[]
+  models    Model[]
+  createdAt DateTime  @default(now())
+}
+
+model Project {
+  id                String            @id @default(uuid())
+  userId            String
+  user              User              @relation(fields: [userId], references: [id])
+  name              String
+  description       String?
+  orchestrationMode String            // 'rule', 'manager', 'consensus'
+  agents            Agent[]
+  tasks             Task[]
+  files             File[]
+  memories          Memory[]
+  terminalSessions  TerminalSession[]
+  events            Event[]
+  auditLedger       AuditLedger[]
+  createdAt         DateTime          @default(now())
+}
+
+model Model {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  provider        String   // openai, anthropic, gemini, local
+  modelName       String
+  apiKeyEncrypted String?
+  endpoint        String?
+  isActive        Boolean  @default(true)
+  agents          Agent[]
+  createdAt       DateTime @default(now())
+}
+
+model Agent {
+  id               String            @id @default(uuid())
+  projectId        String
+  project          Project           @relation(fields: [projectId], references: [id])
+  modelId          String
+  model            Model             @relation(fields: [modelId], references: [id])
+  name             String
+  role             String
+  state            String            // 'idle', 'working', 'error'
+  isManager        Boolean           @default(false)
+  agentTools       AgentTool[]
+  memories         Memory[]
+  tasks            Task[]
+  terminalCommands TerminalCommand[]
+  proposals        Proposal[]
+  votes            Vote[]
+  metrics          AgentMetric?
+  createdAt        DateTime          @default(now())
+}
+
+model Tool {
+  id          String      @id @default(uuid())
+  name        String
+  description String?
+  agentTools  AgentTool[]
+}
+
+model AgentTool {
+  agentId String
+  agent   Agent  @relation(fields: [agentId], references: [id])
+  toolId  String
+  tool    Tool   @relation(fields: [toolId], references: [id])
+
+  @@id([agentId, toolId])
+}
+
+model Memory {
+  id          String   @id @default(uuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id])
+  agentId     String
+  agent       Agent    @relation(fields: [agentId], references: [id])
+  type        String   // "global", "agent", "task"
+  content     String
+  embeddingId String?
+  createdAt   DateTime @default(now())
+}
+
+model Task {
+  id               String            @id @default(uuid())
+  projectId        String
+  project          Project           @relation(fields: [projectId], references: [id])
+  title            String
+  description      String?
+  status           String            // 'pending', 'in_progress', 'completed', 'failed'
+  assignedAgentId  String?
+  assignedAgent    Agent?            @relation(fields: [assignedAgentId], references: [id])
+  createdBy        String?           // user or agent id
+  fromEdges        TaskEdge[]        @relation("FromTask")
+  toEdges          TaskEdge[]        @relation("ToTask")
+  proposals        Proposal[]
+  consensusResults ConsensusResult[]
+  createdAt        DateTime          @default(now())
+}
+
+model TaskEdge {
+  id         String @id @default(uuid())
+  fromTaskId String
+  fromTask   Task   @relation("FromTask", fields: [fromTaskId], references: [id])
+  toTaskId   String
+  toTask     Task   @relation("ToTask", fields: [toTaskId], references: [id])
+}
+
+model File {
+  id             String        @id @default(uuid())
+  projectId      String
+  project        Project       @relation(fields: [projectId], references: [id])
+  path           String
+  content        String
+  lastModifiedBy String?       // agent/user id
+  version        Int           @default(1)
+  fileVersions   FileVersion[]
+  createdAt      DateTime      @default(now())
+}
+
+model FileVersion {
+  id         String   @id @default(uuid())
+  fileId     String
+  file       File     @relation(fields: [fileId], references: [id])
+  content    String
+  modifiedBy String?
+  createdAt  DateTime @default(now())
+}
+
+model TerminalSession {
+  id               String            @id @default(uuid())
+  projectId        String
+  project          Project           @relation(fields: [projectId], references: [id])
+  createdBy        String?
+  terminalCommands TerminalCommand[]
+  createdAt        DateTime          @default(now())
+}
+
+model TerminalCommand {
+  id        String          @id @default(uuid())
+  sessionId String
+  session   TerminalSession @relation(fields: [sessionId], references: [id])
+  agentId   String?
+  agent     Agent?          @relation(fields: [agentId], references: [id])
+  command   String
+  output    String?
+  status    String?
+  executedAt DateTime       @default(now())
+}
+
+model Event {
+  id          String   @id @default(uuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id])
+  sourceAgent String?
+  targetAgent String?
+  type        String
+  payload     Json?
+  createdAt   DateTime @default(now())
+}
+
+model Proposal {
+  id        String   @id @default(uuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id])
+  agentId   String
+  agent     Agent    @relation(fields: [agentId], references: [id])
+  content   String
+  score     Float?
+  votes     Vote[]
+  selectedIn ConsensusResult[]
+  createdAt DateTime @default(now())
+}
+
+model Vote {
+  id         String   @id @default(uuid())
+  proposalId String
+  proposal   Proposal @relation(fields: [proposalId], references: [id])
+  agentId    String
+  agent      Agent    @relation(fields: [agentId], references: [id])
+  score      Float
+}
+
+model ConsensusResult {
+  id               String   @id @default(uuid())
+  taskId           String
+  task             Task     @relation(fields: [taskId], references: [id])
+  selectedProposalId String
+  selectedProposal Proposal @relation(fields: [selectedProposalId], references: [id])
+  confidence       Float?
+  createdAt        DateTime @default(now())
+}
+
+model AuditLedger {
+  id          String   @id @default(uuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id])
+  actionType  String
+  payload     Json?
+  hash        String?
+  prevHash    String?
+  createdAt   DateTime @default(now())
+}
+
+model AgentMetric {
+  id             String   @id @default(uuid())
+  agentId        String   @unique
+  agent          Agent    @relation(fields: [agentId], references: [id])
+  tasksCompleted Int      @default(0)
+  errors         Int      @default(0)
+  avgScore       Float    @default(0)
+  lastUpdated    DateTime @default(now())
+}

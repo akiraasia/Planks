@@ -1,0 +1,344 @@
+That’s actually a strong concept—**visual orchestration instead of config forms**. The “wood plank” metaphor works because it makes abstract AI agents feel *tangible and composable*. Let’s turn this into a **clean frontend system design for your app: *Planks***.
+
+---
+
+# 🪵 **PLANKS — Frontend Design System**
+
+> “Build software by arranging intelligent planks”
+
+---
+
+# 🎯 Core UX Idea
+
+Each AI agent = a **wood plank block**
+
+* Different colors → different roles
+* Drag & drop → defines workflow
+* Connections → define execution flow
+* Stack/order → defines priority or sequence
+
+---
+
+# 🧠 1. VISUAL LANGUAGE
+
+## 🪵 Agent Planks (Core Component)
+
+Each plank is a **2D rectangular block styled like wood**
+
+### Properties:
+
+* **Color = Role**
+* **Grain texture = Model type**
+* **Thickness = priority or weight**
+* **Label = agent name + model**
+
+---
+
+## 🎨 Role → Color Mapping
+
+```ts
+const roleColors = {
+  planner: "#8B5A2B",     // dark wood
+  frontend: "#D2B48C",    // light wood
+  backend: "#A0522D",     // medium wood
+  reviewer: "#5C4033",    // deep brown
+  orchestrator: "#3E2723" // almost black
+};
+```
+
+---
+
+## 🧩 Plank UI Structure
+
+```id="f5r2yx"
+┌───────────────────────────┐
+│  🪵 Claude (Frontend)     │
+│  Model: anthropic/claude  │
+│  Status: Active           │
+└───────────────────────────┘
+```
+
+---
+
+# 🖱️ 2. DRAG & DROP SYSTEM
+
+## Interaction Model
+
+User flow:
+
+1. Add agents (API + role)
+2. Planks appear in sidebar
+3. Drag into canvas
+4. Arrange:
+
+   * horizontal → parallel
+   * vertical → sequential
+5. Connect planks (edges)
+
+---
+
+## 🧱 Canvas Layout
+
+```id="fkhb1t"
+[ Sidebar ]      [ Canvas Area ]
+
+Agents           ┌───────────────┐
+🪵 Claude        │  🪵 Planner    │
+🪵 GPT           │      ↓        │
+🪵 Gemini        │ 🪵 Frontend   │
+                 │ 🪵 Backend    │
+                 │      ↓        │
+                 │ 🪵 Reviewer   │
+                 └───────────────┘
+```
+
+---
+
+## 🔗 Connection Types
+
+* **Arrow (→)** = dependency
+* **Stacking (↓)** = sequence
+* **Parallel alignment** = concurrent execution
+
+---
+
+# 🧠 3. CORE FRONTEND COMPONENTS
+
+## 1. Plank Component
+
+```tsx
+type PlankProps = {
+  id: string;
+  name: string;
+  role: string;
+  model: string;
+  color: string;
+  status: "idle" | "working" | "error";
+};
+```
+
+---
+
+## 2. Canvas Engine
+
+Use:
+
+* `react-flow` (BEST FIT)
+* or `dnd-kit` (more control)
+
+---
+
+## 3. Sidebar (Agent Pool)
+
+* Shows all created agents
+* Drag source
+
+---
+
+## 4. Properties Panel
+
+When plank clicked:
+
+```id="ct6yng"
+Agent: Claude
+Role: Frontend
+Model: Anthropic
+Tools: [✓] File [✓] Terminal
+```
+
+---
+
+## 5. Execution Bar
+
+* ▶ Run
+* ⏸ Pause
+* 🔄 Re-run
+* ⚖ Consensus mode toggle
+
+---
+
+# 🧬 4. INTERACTION LOGIC
+
+## 🧠 Workflow Interpretation
+
+Your canvas becomes a **task graph**
+
+Example:
+
+```id="5nwtqy"
+Planner → Frontend
+Planner → Backend
+Frontend + Backend → Reviewer
+```
+
+Converted to:
+
+* tasks table
+* task_edges table
+
+---
+
+## ⚙️ Real-Time Feedback
+
+Each plank shows:
+
+* 🟢 working
+* 🔴 error
+* 🔵 idle
+
+Optional:
+
+* live token stream preview
+
+---
+
+# 🔥 5. ADVANCED INTERACTIONS
+
+## 🪵 A. Stack Mode (Unique UX)
+
+User stacks planks:
+
+```id="3rwfz4"
+[ Planner ]
+[ Frontend ]
+[ Reviewer ]
+```
+
+→ interpreted as strict sequence
+
+---
+
+## 🔀 B. Split Mode
+
+User places side-by-side:
+
+```id="e3t2q2"
+[ Frontend ]   [ Backend ]
+```
+
+→ parallel execution
+
+---
+
+## 🔗 C. Smart Auto-Suggestions
+
+When user drops plank:
+
+* system suggests:
+
+  * “connect to planner?”
+  * “add reviewer?”
+
+---
+
+# 🧠 6. MANAGER AI VISUALIZATION
+
+If enabled:
+
+* appears as **floating plank above others**
+
+```id="n7kpjg"
+        🪵 Manager
+         ↓ ↓ ↓
+   🪵 Frontend 🪵 Backend
+```
+
+---
+
+# 📊 7. CONSENSUS VISUALIZATION (YOUR USP)
+
+Show:
+
+* multiple outputs per plank
+* voting bars
+
+```id="n3x2qz"
+Frontend Output A ██████ 80%
+Frontend Output B ██ 20%
+```
+
+---
+
+# 💻 8. TECH STACK
+
+## Frontend
+
+* Next.js
+* Tailwind
+* React Flow (graph)
+* Zustand (state)
+
+---
+
+## Rendering
+
+* Canvas / SVG (React Flow handles this)
+
+---
+
+## Styling
+
+* Wood textures via CSS / images
+* Subtle shadows (depth)
+
+---
+
+# 🧱 9. STATE MODEL (Frontend)
+
+```ts
+type CanvasState = {
+  nodes: PlankNode[];
+  edges: Edge[];
+};
+
+type PlankNode = {
+  id: string;
+  position: { x: number; y: number };
+  role: string;
+  agentId: string;
+};
+```
+
+---
+
+# 🚀 10. USER FLOW
+
+```id="v0sd0r"
+1. Create Project
+2. Add AI models (API keys)
+3. Assign roles
+4. Drag planks to canvas
+5. Connect / arrange
+6. Click RUN
+7. Watch agents execute
+8. See consensus output
+```
+
+---
+
+# 💡 DESIGN INSIGHT (Important)
+
+This is NOT just UI.
+
+👉 You are building:
+**A visual programming language for multi-agent systems**
+
+Planks = primitives
+Connections = logic
+Canvas = execution graph
+
+---
+
+# ⚠️ What to avoid
+
+* ❌ Too many controls inside plank
+* ❌ Overcomplicated drag rules
+* ❌ Hidden execution logic
+
+Keep it:
+
+* visual
+* predictable
+* composable
+
+

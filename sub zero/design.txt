@@ -1,0 +1,414 @@
+Alright—let’s turn your idea into a **clean, buildable sub-application design** inside your cloud platform. I’ll keep it structured like a real product spec + system blueprint so you can directly start implementing.
+
+---
+
+# 🧠 Sub-App Name (Working)
+
+**MADE (Multi-Agent Development Engine)**
+*A cloud workspace where AI models become collaborative coding agents*
+
+---
+
+# 🎯 Core Objective
+
+> Let users plug in multiple AI APIs → assign roles → agents collaborate on code in a shared cloud environment → optional AI manager or consensus-driven execution
+
+---
+
+# 🧩 1. PRODUCT SURFACE (What user sees)
+
+## 🖥️ Main Interface Layout
+
+```
+---------------------------------------------------
+| Project Explorer | Code Editor (Monaco)         |
+|------------------|------------------------------|
+| Agents Panel     | Terminal (shared)            |
+|------------------|------------------------------|
+| Task Graph View  | Logs / Consensus Output      |
+---------------------------------------------------
+```
+
+---
+
+## 🧑‍💻 Key UI Panels
+
+### 1. Agent Panel
+
+* Add AI models (API key / endpoint)
+* Assign roles:
+
+  * frontend
+  * backend
+  * planner
+  * reviewer
+  * orchestrator (optional)
+
+---
+
+### 2. Task Graph View (🔥 important)
+
+Visual DAG of tasks:
+
+```
+Planner
+  ↓
+Frontend   Backend
+  ↓           ↓
+     Reviewer
+```
+
+---
+
+### 3. Code Editor
+
+* Shared across agents
+* Shows:
+
+  * who edited what
+  * agent tags per change
+
+---
+
+### 4. Terminal Panel
+
+* Shared execution environment
+* Agents + user can run commands
+* Logs are tracked per agent
+
+---
+
+### 5. Consensus / Logs Panel
+
+* Shows:
+
+  * conflicts
+  * decisions
+  * final merged outputs
+
+---
+
+# 🧬 2. CORE SYSTEM ARCHITECTURE
+
+## 🔷 Layer 1: Model Gateway
+
+Handles:
+
+* API keys
+* Model metadata
+* Rate limits
+
+```ts
+type ModelConfig = {
+  id: string;
+  provider: string;
+  apiKey: string;
+  endpoint?: string;
+};
+```
+
+---
+
+## 🔷 Layer 2: Agent Engine (CORE)
+
+Transforms models → agents
+
+```ts
+type Agent = {
+  id: string;
+  role: string;
+  model: ModelConfig;
+  state: "idle" | "working" | "error";
+
+  tools: ToolSet;
+  memory: MemoryStore;
+};
+```
+
+---
+
+## 🔷 Layer 3: Role System
+
+Predefined + custom roles:
+
+```ts
+type Role =
+  | "planner"
+  | "frontend"
+  | "backend"
+  | "reviewer"
+  | "orchestrator"
+  | "custom";
+```
+
+Each role maps to:
+
+* prompt template
+* allowed tools
+* priority
+
+---
+
+## 🔷 Layer 4: Tooling System
+
+Agents operate ONLY via tools:
+
+```ts
+type ToolSet = {
+  readFile(path: string): string;
+  writeFile(path: string, content: string): void;
+  runCommand(cmd: string): string;
+  searchCode(query: string): string[];
+  callAPI(endpoint: string): any;
+};
+```
+
+---
+
+## 🔷 Layer 5: Shared Memory + Event Bus
+
+### Memory
+
+* Vector DB (context)
+* Project state
+
+### Event Bus (Redis / Kafka)
+
+```json
+{
+  "type": "TASK_CREATED",
+  "source": "planner",
+  "target": "frontend",
+  "payload": {}
+}
+```
+
+---
+
+## 🔷 Layer 6: Orchestration Engine
+
+Supports 3 modes:
+
+---
+
+### 🟢 Mode A: Rule-Based (MVP)
+
+Simple flow:
+
+```ts
+planner → frontend + backend → reviewer
+```
+
+---
+
+### 🟡 Mode B: Manager AI
+
+```ts
+managerAgent.assignTasks(task)
+```
+
+---
+
+### 🔴 Mode C: Consensus Mode (YOUR CORE DIFFERENTIATOR)
+
+No central controller.
+
+Agents:
+
+* propose outputs
+* vote / score
+* merge via consensus
+
+---
+
+## 🔷 Layer 7: Consensus Engine (Reuse your work)
+
+Integrate:
+
+* `consensus.ts`
+* `mergeEngine`
+* `infraScore`
+
+### Responsibilities:
+
+* conflict resolution
+* best output selection
+* merge branches
+
+---
+
+## 🔷 Layer 8: Execution Environment
+
+Each project runs in:
+
+* Container (Docker / Firecracker)
+* Git-backed FS
+
+### Terminal sandbox:
+
+```bash
+npm install
+npm run dev
+```
+
+All actions logged (→ your DAL system)
+
+---
+
+## 🔷 Layer 9: Audit + Ledger (Optional but powerful)
+
+Every action:
+
+```json
+{
+  "agent": "backend",
+  "action": "writeFile",
+  "hash": "abc123",
+  "prevHash": "xyz789"
+}
+```
+
+→ Immutable chain (fits your blockchain + quantum ideas)
+
+---
+
+# 🔄 3. FULL PIPELINE FLOW
+
+```
+User creates project
+        ↓
+Adds AI models
+        ↓
+Assigns roles
+        ↓
+Chooses orchestration mode
+        ↓
+Gives task (e.g. "build app")
+        ↓
+Planner creates task graph
+        ↓
+Agents execute in parallel
+        ↓
+Event bus syncs actions
+        ↓
+Consensus engine resolves conflicts
+        ↓
+Code merged
+        ↓
+Executed in terminal
+        ↓
+Feedback stored in memory
+```
+
+---
+
+# 🧠 4. ADVANCED FEATURES (Your style)
+
+## 🔬 A. Reward-Based Agent Optimization
+
+Each agent gets score:
+
+```ts
+score = accuracy + speed - errors
+```
+
+Used for:
+
+* dynamic agent selection
+* Bayesian optimization (your research)
+
+---
+
+## 🔗 B. Agent Communication Protocol
+
+```json
+{
+  "from": "frontend",
+  "to": "backend",
+  "intent": "need_api",
+  "message": "Provide endpoint for user data"
+}
+```
+
+---
+
+## 🧬 C. Quantum-Inspired Layer (Optional Future)
+
+Map:
+
+* Agents → qubits
+* Tasks → superposition
+* Consensus → collapse
+* Memory → entanglement
+
+---
+
+# ⚙️ 5. TECH STACK
+
+## Backend
+
+* Node.js / Bun
+* Redis (event bus + queues)
+* PostgreSQL
+* Vector DB (Weaviate)
+
+## Execution
+
+* Docker / Firecracker
+* WebContainers (optional)
+
+## Frontend
+
+* Next.js
+* Monaco Editor
+
+---
+
+# 🚀 6. MVP BUILD PLAN (DO THIS)
+
+## Phase 1 (Core)
+
+* Agent abstraction
+* Role system
+* File read/write
+* Simple orchestrator
+
+## Phase 2
+
+* Terminal sandbox
+* Multi-agent execution
+
+## Phase 3
+
+* Manager AI
+
+## Phase 4 (🔥 your strength)
+
+* Consensus engine integration
+
+## Phase 5
+
+* Memory + optimization
+
+---
+
+# ⚠️ Important Design Constraints
+
+* ❌ No scraping API keys
+* ✅ BYOK + open endpoints
+* ✅ Sandbox EVERYTHING
+* ✅ Limit agent permissions
+
+---
+
+# 💡 Final Insight
+
+What you’re building is NOT just:
+
+> “AI coding tool”
+
+It’s actually:
+
+> **A distributed intelligence operating system for software creation**
+
+
